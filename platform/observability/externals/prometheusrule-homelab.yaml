@@ -1,0 +1,49 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-basic-alerts
+  namespace: monitoring
+  labels:
+    release: kps
+spec:
+  groups:
+    - name: homelab.nodes
+      rules:
+        - alert: ExternalNodeExporterDown
+          expr: up{job="external-node-exporters"} == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node exporter down on {{ $labels.instance }}"
+            description: "Prometheus cannot scrape node_exporter on {{ $labels.instance }}."
+        - alert: NodeFilesystemAlmostFull
+          expr: 100 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} * 100 / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"}) > 85
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Filesystem >85% full on {{ $labels.instance }}"
+        - alert: NodeMemoryPressure
+          expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.90
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Memory >90% used on {{ $labels.instance }}"
+    - name: aerospike.basic
+      rules:
+        - alert: AerospikeExporterDown
+          expr: aerospike_node_up == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Aerospike exporter reports node down"
+        - alert: AerospikeStopWrites
+          expr: aerospike_namespace_stop_writes == 1
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Aerospike stop-writes is active"

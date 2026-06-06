@@ -1,0 +1,56 @@
+traces:
+  otlp:
+    grpc:
+      enabled: true
+    http:
+      enabled: true
+
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: tempo
+      endpoint: tempo-minio.monitoring.svc.cluster.local:9000
+      access_key: grafana-tempo
+      secret_key: supersecret
+      insecure: true
+
+minio:
+  serviceAccount:
+    create: true
+    name: tempo-minio-sa
+  enabled: true
+  rootUser: grafana-tempo
+  rootPassword: supersecret
+  persistence:
+    enabled: true
+    storageClass: local-path
+    size: 20Gi
+  buckets:
+    - name: tempo
+      policy: none
+      purge: false
+
+compactor:
+  config:
+    compaction:
+      block_retention: 168h
+
+metricsGenerator:
+  enabled: true
+  config:
+    storage:
+      path: /var/tempo/wal
+      remote_write:
+        - url: http://kps-prometheus.monitoring.svc.cluster.local:9090/api/v1/write
+
+distributor:
+  replicas: 1
+ingester:
+  replicas: 1
+querier:
+  replicas: 1
+queryFrontend:
+  replicas: 1
+compactor:
+  replicas: 1

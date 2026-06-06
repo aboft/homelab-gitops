@@ -12,3 +12,8 @@ resources:
   - traefik.yaml
   - jellyfin.yaml
   - nextcloud.yaml
+  - observability-kps.yaml
+  - observability-extras.yaml
+  - observability-loki.yaml
+  - observability-alloy.yaml
+  - observability-tempo.yaml

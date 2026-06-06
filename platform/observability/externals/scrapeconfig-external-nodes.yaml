@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: external-node-exporters
+  namespace: monitoring
+  labels:
+    prometheus: kps
+spec:
+  staticConfigs:
+    - labels:
+        job: external-node-exporters
+        cluster: homelab
+      targets:
+        - 192.168.88.100:9100 # johto
+        - 192.168.88.101:9100 # hoenn
+        - 192.168.88.102:9100 # paldea
+        - 192.168.88.158:9100 # nginx/reverse proxy
+        - 192.168.88.147:9100 # pihole/freshpi if exporter installed
+        - proxbox.aboft.local:9100
+        - proxbench.aboft.local:9100
+        - minipc.aboft.local:9100
+  relabelings:
+    - sourceLabels: [__address__]
+      targetLabel: instance
+    - targetLabel: job
+      replacement: node-exporter

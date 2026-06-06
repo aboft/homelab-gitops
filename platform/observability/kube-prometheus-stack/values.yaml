@@ -1,0 +1,152 @@
+fullnameOverride: kps
+
+crds:
+  enabled: true
+
+defaultRules:
+  create: true
+
+alertmanager:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+    hosts:
+      - alertmanager.aboft.dev
+    paths:
+      - /
+    pathType: Prefix
+    tls:
+      - secretName: alertmanager-tls
+        hosts:
+          - alertmanager.aboft.dev
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+
+prometheus:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+    hosts:
+      - prometheus.aboft.dev
+    paths:
+      - /
+    pathType: Prefix
+    tls:
+      - secretName: prometheus-tls
+        hosts:
+          - prometheus.aboft.dev
+  prometheusSpec:
+    retention: 15d
+    retentionSize: 20GB
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: local-path
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 30Gi
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    scrapeConfigSelector:
+      matchLabels:
+        prometheus: kps
+    scrapeConfigNamespaceSelector: {}
+
+grafana:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+    hosts:
+      - grafana.aboft.dev
+    path: /
+    pathType: Prefix
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - grafana.aboft.dev
+  persistence:
+    enabled: true
+    type: pvc
+    storageClassName: local-path
+    accessModes: ["ReadWriteOnce"]
+    size: 5Gi
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      folderAnnotation: grafana_folder
+      searchNamespace: ALL
+    datasources:
+      enabled: true
+      label: grafana_datasource
+      searchNamespace: ALL
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki-gateway.monitoring.svc.cluster.local
+      isDefault: false
+    - name: Tempo
+      type: tempo
+      access: proxy
+      url: http://tempo-query-frontend.monitoring.svc.cluster.local:3100
+      isDefault: false
+      jsonData:
+        tracesToLogsV2:
+          datasourceUid: Loki
+        tracesToMetrics:
+          datasourceUid: Prometheus
+
+kubeEtcd:
+  enabled: true
+  service:
+    targetPort: 2381
+  endpoints:
+    - 192.168.88.100
+    - 192.168.88.101
+    - 192.168.88.102
+
+kubeControllerManager:
+  enabled: true
+  endpoints:
+    - 192.168.88.100
+    - 192.168.88.101
+    - 192.168.88.102
+
+kubeScheduler:
+  enabled: true
+  endpoints:
+    - 192.168.88.100
+    - 192.168.88.101
+    - 192.168.88.102
+
+kubeProxy:
+  enabled: true
+  endpoints:
+    - 192.168.88.100
+    - 192.168.88.101
+    - 192.168.88.102
+
+
+prometheus-node-exporter:
+  enabled: true
+  hostRootFsMount:
+    enabled: false
+
+kube-state-metrics:
+  enabled: true

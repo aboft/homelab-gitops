@@ -1,0 +1,120 @@
+deploymentMode: SimpleScalable
+
+global:
+  podSecurityContext:
+    fsGroup: 10001
+    runAsUser: 10001
+    runAsGroup: 10001
+
+loki:
+  auth_enabled: false
+
+  commonConfig:
+    replication_factor: 1
+
+  schemaConfig:
+    configs:
+      - from: "2026-01-01"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+
+  limits_config:
+    retention_period: 720h
+    reject_old_samples: true
+    reject_old_samples_max_age: 168h
+
+  compactor:
+    retention_enabled: true
+    delete_request_store: s3
+    retention_delete_delay: 2h
+    retention_delete_worker_count: 50
+
+  storage:
+    type: s3
+    bucketNames:
+      chunks: chunks
+      ruler: ruler
+      admin: admin
+    s3:
+      endpoint: http://loki-minio.monitoring.svc.cluster.local:9000
+      accessKeyId: root-user
+      secretAccessKey: supersecretpassword
+      s3ForcePathStyle: true
+      insecure: true
+
+  podSecurityContext:
+    fsGroup: 10001
+    runAsUser: 10001
+    runAsGroup: 10001
+
+minio:
+  serviceAccount:
+    create: true
+    name: loki-minio-sa
+  enabled: true
+  rootUser: root-user
+  rootPassword: supersecretpassword
+  persistence:
+    enabled: true
+    storageClass: local-path
+    size: 20Gi
+  buckets:
+    - name: chunks
+      policy: none
+      purge: false
+    - name: ruler
+      policy: none
+      purge: false
+    - name: admin
+      policy: none
+      purge: false
+
+write:
+  replicas: 1
+  podSecurityContext:
+    fsGroup: 10001
+    fsGroupChangePolicy: Always
+    runAsUser: 10001
+    runAsGroup: 10001
+  containerSecurityContext:
+    runAsUser: 10001
+    runAsGroup: 10001
+    allowPrivilegeEscalation: false
+  persistence:
+    enableStatefulSetAutoDeletePVC: false
+    size: 10Gi
+
+backend:
+  replicas: 1
+  podSecurityContext:
+    fsGroup: 10001
+    fsGroupChangePolicy: Always
+    runAsUser: 10001
+    runAsGroup: 10001
+  persistence:
+    enableStatefulSetAutoDeletePVC: false
+    size: 10Gi
+
+read:
+  replicas: 1
+
+gateway:
+  enabled: true
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+    hosts:
+      - host: loki.aboft.dev
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: loki-tls
+        hosts:
+          - loki.aboft.dev

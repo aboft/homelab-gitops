@@ -3,6 +3,7 @@ resources:
   - udfs.yaml
   - externalsecret-features.yaml
   - externalsecret-exporter.yaml
+  - externalsecret-auth.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

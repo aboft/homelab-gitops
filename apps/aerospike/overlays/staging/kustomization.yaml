@@ -1,7 +1,5 @@
 resources:
   - ../../base
-  - externalsecret-auth.yaml
-  - secretstore.yaml
 
 namespace: asdb-staging
 

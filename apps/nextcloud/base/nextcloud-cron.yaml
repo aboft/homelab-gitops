@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nextcloud-cron
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: nextcloud-cron
+              image: nextcloud:33
+              imagePullPolicy: IfNotPresent
+              command:
+                - su
+                - -s
+                - /bin/sh
+                - www-data
+                - -c
+                - php -f /var/www/html/cron.php
+              envFrom:
+                - secretRef:
+                    name: nextcloud-secret
+              volumeMounts:
+                - name: nextcloud-data
+                  mountPath: /var/www/html/data
+          volumes:
+            - name: nextcloud-data
+              persistentVolumeClaim:
+                claimName: nextcloud-data

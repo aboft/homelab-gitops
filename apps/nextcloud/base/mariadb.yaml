@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nextdb
+spec:
+  serviceName: nextdb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextdb
+  template:
+    metadata:
+      labels:
+        app: nextdb
+    spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      containers:
+        - name: mariadb
+          image: mariadb:11.4.7
+          imagePullPolicy: IfNotPresent
+          args:
+            - --transaction-isolation=READ-COMMITTED
+            - --binlog-format=ROW
+            - --innodb-file-per-table=1
+            - --skip-innodb-read-only-compressed
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MARIADB_DATABASE
+              value: nextcloud
+          envFrom:
+            - secretRef:
+                name: nextcloud-secret
+          volumeMounts:
+            - name: nextdb-pvc
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: nextdb-pvc
+          persistentVolumeClaim:
+            claimName: nextdb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextdb
+spec:
+  selector:
+    app: nextdb
+  ports:
+    - port: 3306
+      targetPort: 3306

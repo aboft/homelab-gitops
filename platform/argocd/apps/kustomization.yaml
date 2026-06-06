@@ -11,3 +11,4 @@ resources:
   - metallb.yaml
   - traefik.yaml
   - jellyfin.yaml
+  - nextcloud.yaml

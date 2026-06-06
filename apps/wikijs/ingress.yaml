@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wikijs-ingress
+  namespace: wiki
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - wiki.aboft.dev
+      secretName: wiki-aboft-dev-tls
+  rules:
+    - host: wiki.aboft.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wikijs
+                port:
+                  number: 3000

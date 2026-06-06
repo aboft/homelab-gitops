@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aboftybot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aboftybot
+  template:
+    metadata:
+      labels:
+        app: aboftybot
+    spec:
+      containers:
+      - name: aboftybot
+        image: ghcr.io/aboft/aboftybot-go:latest
+        envFrom:
+        - configMapRef:
+            name: aboftybot-config
+        - secretRef:
+            name: aboftybot-secret

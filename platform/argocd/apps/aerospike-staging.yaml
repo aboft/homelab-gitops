@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/aboft/homelab-gitops.git
     targetRevision: main
-    path: platform/aerospike/overlays/staging
+    path: apps/aerospike/overlays/staging
   destination:
     server: https://kubernetes.default.svc
     namespace: asdb-staging

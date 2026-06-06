@@ -1,0 +1,22 @@
+namespace: aboftybot
+
+resources:
+- ../../base
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+- literals:
+  - IRC_SERVER=irc.snoonet.org:6667
+  - IRC_NICK=aboftybot
+  - IRC_CHANNEL=#linuxmasterrace
+  - DB_HOST=asdb.asdb-prod.svc.cluster.local
+  name: aboftybot-config
+
+images:
+- name: ghcr.io/aboft/aboftybot-go
+  newName: ghcr.io/aboft/aboftybot-go
+  newTag: v1.0.1
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/aboft/aboftybot-go.git
     targetRevision: main
-    path: deploy/overlays/dev
+    path: apps/aboftybot/overlays/dev
   destination:
     server: https://kubernetes.default.svc
     namespace: aboftybot-dev

@@ -10,3 +10,4 @@ resources:
   - aerospike-staging.yaml
   - metallb.yaml
   - traefik.yaml
+  - jellyfin.yaml

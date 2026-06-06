@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin
+  labels:
+    app: jellyfin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyfin
+  template:
+    metadata:
+      labels:
+        app: jellyfin
+    spec:
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: jellyfin-config-pvc
+      - name: torrents
+        persistentVolumeClaim:
+          claimName: torrents-pvc
+      - name: cache
+        persistentVolumeClaim:
+          claimName: jellyfin-cache-pvc
+      containers:
+      - name: jellyfin
+        image: docker.io/jellyfin/jellyfin
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8096
+        volumeMounts:
+          - name: config
+            mountPath: /config
+          - name: cache
+            mountPath: /cache
+          - name: torrents
+            mountPath: /torrents
+        env:
+          - name: PUID
+            value: "1000"
+          - name: PGID
+            value: "1000"

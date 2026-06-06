@@ -7,7 +7,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/aboft/aboftybot-go.git
+    repoURL: https://github.com/aboft/homelab-gitops.git
     targetRevision: main
     path: apps/aboftybot/overlays/prod
   destination:

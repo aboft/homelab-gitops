@@ -17,12 +17,11 @@ applicationSet:
 
 redis:
   enabled: true
-
-  secretInit:
-    enabled: false
-
   existingSecret: argocd-redis
   existingSecretPasswordKey: auth
+
+redisSecretInit:
+  enabled: false
 
 notifications:
   enabled: true

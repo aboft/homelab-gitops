@@ -1,12 +1,9 @@
 resources:
   - ../../base
+  - externalsecret-auth.yaml
+  - secretstore.yaml
 
 namespace: asdb-staging
 
 generatorOptions:
   disableNameSuffixHash: true
-
-secretGenerator:
-  - name: auth-secret
-    envs:
-      - secret.env

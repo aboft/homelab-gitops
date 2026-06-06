@@ -33,7 +33,7 @@ spec:
   source:
     repoURL: https://github.com/aboft/homelab-gitops.git
     targetRevision: main
-    path: infra/metallb/config
+    path: platform/metallb/config
 
   destination:
     server: https://kubernetes.default.svc

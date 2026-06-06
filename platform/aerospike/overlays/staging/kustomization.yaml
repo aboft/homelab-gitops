@@ -1,0 +1,12 @@
+resources:
+  - ../../base
+
+namespace: asdb-staging
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: auth-secret
+    envs:
+      - secret.env

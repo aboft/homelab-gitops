@@ -1,0 +1,13 @@
+resources:
+  - ../../base
+
+namespace: asdb-prod
+
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: auth-secret
+    envs:
+      - secret.env

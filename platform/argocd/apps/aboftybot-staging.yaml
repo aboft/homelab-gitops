@@ -1,0 +1,21 @@
+# argocd/apps/aboftybot-staging.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aboftybot-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aboft/aboftybot-go.git
+    targetRevision: main
+    path: deploy/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: aboftybot-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

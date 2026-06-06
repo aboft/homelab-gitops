@@ -1,0 +1,134 @@
+apiVersion: asdb.aerospike.com/v1
+kind: AerospikeCluster
+metadata:
+  name: asdb
+
+spec:
+  size: 3
+  image: aerospike/aerospike-server-enterprise:8.1.2.0
+  podSpec:
+    aerospikeInitContainer:
+      resources:
+        limits:
+          cpu: "16"
+          memory: 32Gi
+        requests:
+          cpu: "1"
+          memory: 1Gi
+    # tolerations:
+    #   - key: "app"
+    #     operator: "Equal"
+    #     value: "aerospike"
+    #     effect: "NoSchedule"
+    # nodeSelector:
+    #   app: aerospike
+    multiPodPerHost: true
+    metadata:
+      annotations:
+        forceRollout: "updateMeToRestart"
+    sidecars:
+      - name: aerospike-prometheus-exporter
+        image: aerospike/aerospike-prometheus-exporter:1.32.0
+        ports:
+          - containerPort: 9145
+            name: exporter
+        envFrom:
+        - secretRef:
+            name: exporter-secret
+
+  aerospikeAccessControl:
+    roles:
+      - name: quota
+        privileges:
+          - read-write
+        readQuota: 20000
+        writeQuota: 20000
+      - name: noquota
+        privileges:
+          - read-write
+    users:
+      - name: admin
+        secretName: auth-secret
+        roles:
+          - sys-admin
+          - user-admin
+          - read-write
+      - name: colton
+        secretName: auth-secret
+        roles:
+          - noquota
+          - sindex-admin
+          - read-write
+          - read-write-udf
+          - udf-admin
+          - data-admin
+          - sys-admin
+          - user-admin
+
+  aerospikeConfig:
+    service:
+      feature-key-file: /etc/aerospike/secret/features.conf
+      cgroup-mem-tracking: true
+      #debug-allocations: all
+    security: 
+      enable-quotas: true
+    network:
+      service:
+        port: 3000
+      fabric:
+        port: 3001
+      heartbeat:
+        port: 3002
+    namespaces:
+      - name: aboftybot
+        replication-factor: 3
+        nsup-period: 120
+        storage-engine:
+          type: device
+          files:
+            - /opt/aerospike/aboftybot/aboftybot1.data
+            - /opt/aerospike/aboftybot/aboftybot2.data
+          filesize: 10737418240
+
+  rackConfig:
+    namespaces:
+      - aboftybot
+    racks:
+      - id: 1
+        storage:
+          cleanupThreads: 10
+          filesystemVolumePolicy:
+            initMethod: deleteFiles
+            cascadeDelete: true
+          blockVolumePolicy:
+            cascadeDelete: true
+              #initMethod: dd
+          volumes:
+            - name: aboftybot
+              aerospike:
+                path: /opt/aerospike/aboftybot/
+              source:
+                persistentVolume:
+                  storageClass: local-path
+                  volumeMode: Filesystem
+                  size: 10Gi
+            - name: workdir
+              aerospike:
+                path: /opt/aerospike
+              source:
+                persistentVolume:
+                  storageClass: local-path
+                  volumeMode: Filesystem
+                  size: 1Gi
+            - name: aerospike-config-secret
+              source:
+                secret:
+                  secretName: aerospike-secret
+              aerospike:
+                path: /etc/aerospike/secret
+            - name: udfs
+              source:
+                configMap:
+                  name: udfs
+              aerospike:
+                path: /opt/aerospike/usr/udf/lua/

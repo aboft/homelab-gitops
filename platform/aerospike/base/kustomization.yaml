@@ -1,0 +1,14 @@
+resources:
+  - deployment.yaml
+  - udfs.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: aerospike-secret
+    files:
+      - features.conf
+  - name: exporter-secret
+    envs:
+      - secret.env

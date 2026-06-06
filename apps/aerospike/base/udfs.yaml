@@ -30,7 +30,4 @@ data:
     end
 kind: ConfigMap
 metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"v1","data":{"basics.lua":"function getDeviceSize(rec)\n  return record.device_size(rec)\nend\nfunction getSetName(rec)\n  return record.setname(rec)\nend\nfunction delete_record(rec)\n  -- Attempt to delete the record\n  local status = aerospike:remove(rec)\n  if status ~= 0 then\n      -- Log only if there is an error in deletion\n      info(\"Failed to delete record: %s. Error Code: %d\", record.digest(rec), status)\n  end\n  return status\nend\n","example.lua":"local function one(rec)\n  return 1\nend\n\nlocal function add(a, b)\n  return a + b\nend\n\nfunction count(stream)\n  return stream : map(one) : reduce(add);\nend\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"udfs","namespace":"aerospike"}}
   name: udfs

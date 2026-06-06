@@ -5,6 +5,8 @@ server:
 configs:
   params:
     server.insecure: true
+  secret:
+    createSecret: false
 
 controller:
   replicas: 1

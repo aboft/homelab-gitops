@@ -17,3 +17,4 @@ resources:
   - observability-loki.yaml
   - observability-alloy.yaml
   - observability-tempo.yaml
+  - aerospike-operator.yaml

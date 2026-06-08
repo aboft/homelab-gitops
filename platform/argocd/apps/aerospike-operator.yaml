@@ -1,19 +1,20 @@
+# platform/argocd/apps/aerospike-operator.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: aerospike-prod
+  name: ako
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   project: default
   source:
     repoURL: https://github.com/aboft/homelab-gitops.git
     targetRevision: main
-    path: apps/aerospike/overlays/prod
+    path: platform/aerospike-operator
   destination:
     server: https://kubernetes.default.svc
-    namespace: asdb-prod
+    namespace: operators
   syncPolicy:
     automated:
       prune: true

@@ -9,6 +9,7 @@ resources:
   - aerospike-prod.yaml
   - aerospike-staging.yaml
   - metallb.yaml
+  - cert-manager.yaml
   - traefik.yaml
   - jellyfin.yaml
   - nextcloud.yaml

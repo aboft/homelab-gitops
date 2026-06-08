@@ -1,0 +1,12 @@
+# bootstrap/external-secrets-operator/subscription.yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: external-secrets-operator
+  namespace: external-secrets
+spec:
+  channel: stable
+  name: external-secrets-operator
+  source: operatorhubio-catalog
+  sourceNamespace: olm
+  installPlanApproval: Automatic

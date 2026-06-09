@@ -1,4 +1,5 @@
 resources:
   - scrapeconfig-external-nodes.yaml
+  - scrapeconfig-aerospike-node-exporters.yaml
   - prometheusrule-homelab.yaml
   - grafana-admin.externalsecret.yaml

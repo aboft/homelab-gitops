@@ -1,0 +1,24 @@
+# platform/observability/externals/scrapeconfig-aerospike-node-exporters.yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: aerospike-node-exporters
+  namespace: monitoring
+  labels:
+    prometheus: kps
+spec:
+  staticConfigs:
+    - labels:
+        job: aerospike-node-exporters
+        cluster: homelab
+        role: aerospike
+      targets:
+        - 192.168.88.100:9145 # johto
+        - 192.168.88.101:9145 # hoenn
+        - 192.168.88.102:9145 # paldea
+
+  relabelings:
+    - sourceLabels: [__address__]
+      targetLabel: instance
+    - targetLabel: job
+      replacement: node-exporter

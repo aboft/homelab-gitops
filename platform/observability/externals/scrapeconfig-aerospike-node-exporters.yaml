@@ -2,24 +2,33 @@
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
-  name: aerospike-node-exporters
+  name: aerospike-exporters
   namespace: monitoring
   labels:
     prometheus: kps
 spec:
-  scrapeInterval: 15s
-  staticConfigs:
-    - labels:
-        job: aerospike-node-exporters
-        cluster: homelab
-        role: aerospike
-      targets:
-        - 192.168.88.100:9145 # johto
-        - 192.168.88.101:9145 # hoenn
-        - 192.168.88.102:9145 # paldea
+  kubernetesSDConfigs:
+    - role: Pod
+      namespaces:
+        names:
+          - asdb-prod
+          - asdb-staging
 
   relabelings:
-    - sourceLabels: [__address__]
-      targetLabel: instance
-    - targetLabel: job
-      replacement: node-exporter
+    - sourceLabels:
+        - __meta_kubernetes_pod_container_name
+      regex: aerospike-prometheus-exporter
+      action: keep
+
+    - sourceLabels:
+        - __meta_kubernetes_pod_ip
+      targetLabel: __address__
+      replacement: $1:9145
+
+    - sourceLabels:
+        - __meta_kubernetes_namespace
+      targetLabel: namespace
+
+    - sourceLabels:
+        - __meta_kubernetes_pod_name
+      targetLabel: pod

@@ -1,34 +1,86 @@
 namespace: monitoring
 
 configMapGenerator:
-  - name: grafana-dashboard-aerospike
+  - name: grafana-dashboard-aerospike-alertsview
     files:
       - json/alertsview.json
-      - json/all_flash.json
-      - json/backupserviceview.json
-      - json/batch_transactions_view.json
+  - name: grafana-dashboard-aerospike-backupservice-backupserviceview
+    files:
+      - json/backupservice-backupserviceview.json
+  - name: grafana-dashboard-aerospike-cluster
+    files:
       - json/cluster.json
-      - json/connector_jvmview.json
-      - json/connectorsview.json
-      - json/datacenter_comparision.json
+  - name: grafana-dashboard-aerospike-connectors-connector-jvmview
+    files:
+      - json/connectors-connector_jvmview.json
+  - name: grafana-dashboard-aerospike-connectors-connectorsview
+    files:
+      - json/connectors-connectorsview.json
+  - name: grafana-dashboard-aerospike-geoview
+    files:
       - json/geoview.json
-      - json/graph_service_jvmview.json
-      - json/graph_service_view.json
-      - json/hostview.json
-      - json/kubernetes_view.json
+  - name: grafana-dashboard-aerospike-graph-graph-service-jvmview
+    files:
+      - json/graph-graph_service_jvmview.json
+  - name: grafana-dashboard-aerospike-graph-graph-service-view
+    files:
+      - json/graph-graph_service_view.json
+  - name: grafana-dashboard-aerospike-kubernetes-kubernetes-view
+    files:
+      - json/kubernetes-kubernetes_view.json
+  - name: grafana-dashboard-aerospike-latency
+    files:
       - json/latency.json
+  - name: grafana-dashboard-aerospike-namespace
+    files:
       - json/namespace.json
-      - json/node_and_host.json
+  - name: grafana-dashboard-aerospike-nodeexporter-hostview
+    files:
+      - json/nodeexporter-hostview.json
+  - name: grafana-dashboard-aerospike-node
+    files:
       - json/node.json
-      - json/read_lru_cache_view.json
-      - json/rolling_restart.json
-      - json/secretagent.json
+  - name: grafana-dashboard-aerospike-secretagent-secretagent
+    files:
+      - json/secretagent-secretagent.json
+  - name: grafana-dashboard-aerospike-set
+    files:
       - json/set.json
+  - name: grafana-dashboard-aerospike-sindex
+    files:
       - json/sindex.json
-      - json/sindex_summary_view.json
+  - name: grafana-dashboard-aerospike-uniquedata
+    files:
       - json/uniquedata.json
+  - name: grafana-dashboard-aerospike-usecases-all-flash
+    files:
+      - json/usecases-all_flash.json
+  - name: grafana-dashboard-aerospike-usecases-batch-transactions-view
+    files:
+      - json/usecases-batch_transactions_view.json
+  - name: grafana-dashboard-aerospike-usecases-datacenter-comparision
+    files:
+      - json/usecases-datacenter_comparision.json
+  - name: grafana-dashboard-aerospike-usecases-node-and-host
+    files:
+      - json/usecases-node_and_host.json
+  - name: grafana-dashboard-aerospike-usecases-read-lru-cache-view
+    files:
+      - json/usecases-read_lru_cache_view.json
+  - name: grafana-dashboard-aerospike-usecases-rolling-restart
+    files:
+      - json/usecases-rolling_restart.json
+  - name: grafana-dashboard-aerospike-usecases-sindex-summary-view
+    files:
+      - json/usecases-sindex_summary_view.json
+  - name: grafana-dashboard-aerospike-users
+    files:
       - json/users.json
-      - json/vector_search_view.json
+  - name: grafana-dashboard-aerospike-vectorsearch-vector-search-view
+    files:
+      - json/vectorsearch-vector_search_view.json
+  - name: grafana-dashboard-aerospike-xdr
+    files:
       - json/xdr.json
 
 generatorOptions:

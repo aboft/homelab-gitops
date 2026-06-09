@@ -6,6 +6,7 @@ metadata:
   labels:
     prometheus: kps
 spec:
+  scrapeInterval: 15s
   staticConfigs:
     - labels:
         job: external-node-exporters

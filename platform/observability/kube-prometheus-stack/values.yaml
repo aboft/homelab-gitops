@@ -111,6 +111,28 @@ grafana:
           datasourceUid: Loki
         tracesToMetrics:
           datasourceUid: Prometheus
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      folder: /tmp/dashboards
+      searchNamespace: ALL
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: homelab
+            orgId: 1
+            folder: Homelab
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /tmp/dashboards/homelab
+    dashboardsConfigMap:
+      homelab: grafana-dashboard-node-exporter-full
+
 
 kubeEtcd:
   enabled: true

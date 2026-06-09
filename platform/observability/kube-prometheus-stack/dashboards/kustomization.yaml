@@ -1,0 +1,4 @@
+# dashboards/kustomization.yaml
+resources:
+  - node-exporter
+  - aerospike

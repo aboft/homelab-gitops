@@ -1,0 +1,12 @@
+# platform/observability/dashboards/kustomization.yaml
+namespace: monitoring
+
+configMapGenerator:
+  - name: grafana-dashboard-node-exporter-full
+    files:
+      - node-exporter-full-1860.json
+
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    grafana_dashboard: "1"

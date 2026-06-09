@@ -1,0 +1,37 @@
+namespace: monitoring
+
+configMapGenerator:
+  - name: grafana-dashboard-aerospike
+    files:
+      - json/alertsview.json
+      - json/all_flash.json
+      - json/backupserviceview.json
+      - json/batch_transactions_view.json
+      - json/cluster.json
+      - json/connector_jvmview.json
+      - json/connectorsview.json
+      - json/datacenter_comparision.json
+      - json/geoview.json
+      - json/graph_service_jvmview.json
+      - json/graph_service_view.json
+      - json/hostview.json
+      - json/kubernetes_view.json
+      - json/latency.json
+      - json/namespace.json
+      - json/node_and_host.json
+      - json/node.json
+      - json/read_lru_cache_view.json
+      - json/rolling_restart.json
+      - json/secretagent.json
+      - json/set.json
+      - json/sindex.json
+      - json/sindex_summary_view.json
+      - json/uniquedata.json
+      - json/users.json
+      - json/vector_search_view.json
+      - json/xdr.json
+
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    grafana_dashboard: "1"

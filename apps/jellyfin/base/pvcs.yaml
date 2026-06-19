@@ -12,22 +12,6 @@ spec:
   resources:
     requests:
       storage: 25Gi
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: torrents-pvc
-  labels:
-    app: jellyfin
-spec:
-  storageClassName: nfs-client
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 25Gi
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -42,3 +26,32 @@ spec:
   resources:
     requests:
       storage: 25Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jellyfin-media-data-pv
+spec:
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: jellyfin-media-static
+  nfs:
+    server: nasty.aboft.local
+    path: /volume1/dedicated_cluster/media-media-data-pvc-pvc-a5d00257-80e5-40ba-9965-11b57e6bac8e
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-data-pvc
+  namespace: jellyfin
+spec:
+  storageClassName: jellyfin-media-static
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Gi
+  volumeName: jellyfin-media-data-pv

@@ -19,12 +19,12 @@ spec:
       - name: config
         persistentVolumeClaim:
           claimName: jellyfin-config-pvc
-      - name: torrents
-        persistentVolumeClaim:
-          claimName: torrents-pvc
       - name: cache
         persistentVolumeClaim:
           claimName: jellyfin-cache-pvc
+      - name: media
+        persistentVolumeClaim:
+          claimName: media-data-pvc
       containers:
       - name: jellyfin
         image: docker.io/jellyfin/jellyfin
@@ -36,7 +36,7 @@ spec:
             mountPath: /config
           - name: cache
             mountPath: /cache
-          - name: torrents
+          - name: media
             mountPath: /torrents
         env:
           - name: PUID

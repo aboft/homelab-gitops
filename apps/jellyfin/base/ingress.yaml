@@ -9,10 +9,10 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - jellyfin.aboft.net
+        - jellyfin.aboft.dev
       secretName: jellyfin-tls
   rules:
-    - host: jellyfin.aboft.net
+    - host: jellyfin.aboft.dev
       http:
         paths:
           - path: /

@@ -17,6 +17,7 @@ spec:
         runAsUser: 999
         runAsGroup: 999
         fsGroup: 999
+        fsGroupChangePolicy: "Always"
       containers:
         - name: mariadb
           image: mariadb:11.4.7

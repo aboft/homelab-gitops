@@ -37,12 +37,12 @@ spec:
             - secretRef:
                 name: nextcloud-secret
           volumeMounts:
-            - name: nextcloud-pvc
-              mountPath: /var/www/html
-              subPath: html
+            # - name: nextcloud-pvc
+            #   mountPath: /var/www/html
+            #   subPath: html
             - name: nextcloud-pvc
               mountPath: /var/www/html/custom_apps
-              subPath: apps
+              subPath: custom_apps
             - name: nextcloud-pvc
               mountPath: /var/www/html/config
               subPath: config

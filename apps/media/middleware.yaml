@@ -1,0 +1,19 @@
+---
+# Restricts the admin apps (qBittorrent, Prowlarr, Radarr, Sonarr) to LAN
+# clients only. Referenced from each Ingress via the annotation:
+#   traefik.ingress.kubernetes.io/router.middlewares: media-media-lan-only@kubernetescrd
+#
+# Combined with the per-app built-in authentication, this keeps these apps
+# private/LAN-only while still served over TLS by Traefik. Jellyfin is handled
+# separately and may remain public.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: media-lan-only
+  namespace: media
+spec:
+  ipAllowList:
+    sourceRange:
+      - 192.168.88.0/24
+      - 10.42.0.0/16
+      - 10.43.0.0/16

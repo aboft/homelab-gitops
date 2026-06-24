@@ -13,6 +13,7 @@ resources:
   - traefik.yaml
   - jellyfin.yaml
   - nextcloud.yaml
+  - media.yaml
   - observability-kps.yaml
   - observability-dashboards.yaml
   - observability-extras.yaml

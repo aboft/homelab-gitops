@@ -1,0 +1,27 @@
+---
+# Shared media library + downloads volume.
+#
+# Mounted at the SAME path (/torrents) in qBittorrent, Radarr and Sonarr so the
+# completed-download path is identical everywhere and no remote path mapping is
+# required. Layout on this volume:
+#   /torrents/downloads  -> qBittorrent completed downloads
+#   /torrents/movies     -> Radarr root folder
+#   /torrents/tv         -> Sonarr root folder
+#
+# ReadWriteMany so qBittorrent, Radarr and Sonarr (separate pods) can all mount
+# it. Backed by the existing nfs-client StorageClass.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-data-pvc
+  labels:
+    app.kubernetes.io/part-of: media
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Gi

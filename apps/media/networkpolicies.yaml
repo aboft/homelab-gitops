@@ -1,0 +1,100 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: media
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+
+---
+# qBittorrent + Prowlarr pod.
+# 8080 = qBittorrent UI/API
+# 9696 = Prowlarr UI/API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: qbittorrent-prowlarr-ingress
+  namespace: media
+spec:
+  podSelector:
+    matchLabels:
+      app: qbittorrent
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 9696
+
+    # Radarr/Sonarr can talk to qBittorrent and Prowlarr.
+    - from:
+        - podSelector:
+            matchLabels:
+              app: radarr
+        - podSelector:
+            matchLabels:
+              app: sonarr
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 9696
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: radarr-ingress
+  namespace: media
+spec:
+  podSelector:
+    matchLabels:
+      app: radarr
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+        # Prowlarr lives inside the qbittorrent pod.
+        - podSelector:
+            matchLabels:
+              app: qbittorrent
+      ports:
+        - protocol: TCP
+          port: 7878
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sonarr-ingress
+  namespace: media
+spec:
+  podSelector:
+    matchLabels:
+      app: sonarr
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+        # Prowlarr lives inside the qbittorrent pod.
+        - podSelector:
+            matchLabels:
+              app: qbittorrent
+      ports:
+        - protocol: TCP
+          port: 8989

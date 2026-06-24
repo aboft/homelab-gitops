@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: qbittorrent-ingress
+  namespace: media
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    # LAN-only access enforced by the Traefik ipAllowList middleware.
+    traefik.ingress.kubernetes.io/router.middlewares: media-media-lan-only@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - qbittorrent.aboft.dev
+      secretName: qbittorrent-tls
+  rules:
+    - host: qbittorrent.aboft.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: qbittorrent
+                port:
+                  number: 8080

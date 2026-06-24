@@ -1,0 +1,132 @@
+---
+# Gluetun + qBittorrent + Prowlarr share a single Pod (and therefore a single
+# network namespace). All of qBittorrent's AND Prowlarr's traffic egresses
+# through Gluetun's VPN tunnel, and Gluetun's firewall acts as the kill switch:
+# if the tunnel drops, neither torrent traffic nor indexer scraping can leak to
+# the home WAN. Neither app has a network path that bypasses the VPN.
+#
+# A single shared tunnel is used (not one Gluetun per app) because Mullvad
+# assigns a fixed address per WireGuard key; running two tunnels with the same
+# key/address conflicts. Prowlarr is exposed via its own Service on port 9696,
+# which selects this pod.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qbittorrent
+  labels:
+    app: qbittorrent
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: qbittorrent
+  template:
+    metadata:
+      labels:
+        app: qbittorrent
+    spec:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - qbittorrent
+                        - radarr
+                        - sonarr
+                topologyKey: kubernetes.io/hostname
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: qbittorrent-config-pvc
+        - name: prowlarr-config
+          persistentVolumeClaim:
+            claimName: prowlarr-config-pvc
+        - name: media
+          persistentVolumeClaim:
+            claimName: media-data-pvc
+        - name: gluetun-tmp
+          emptyDir: {}
+      containers:
+        # ---- VPN gateway / kill switch -------------------------------------
+        - name: gluetun
+          image: qmcgaw/gluetun:latest
+          imagePullPolicy: Always
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+          env:
+            - name: VPN_SERVICE_PROVIDER
+              value: mullvad
+            - name: VPN_TYPE
+              value: wireguard
+            - name: TZ
+              value: America/New_York
+            # Allow inbound to the qBittorrent (8080) and Prowlarr (9696) UIs
+            # through the tunnel firewall.
+            - name: FIREWALL_INPUT_PORTS
+              value: "8080,9696"
+            # Permit return traffic to the LAN, pod and service CIDRs so the
+            # Services / Ingresses can reach the UIs without leaking traffic.
+            - name: FIREWALL_OUTBOUND_SUBNETS
+              value: "192.168.88.0/24,10.42.0.0/16,10.43.0.0/16"
+          # WIREGUARD_PRIVATE_KEY / WIREGUARD_ADDRESSES come from 1Password.
+          envFrom:
+            - secretRef:
+                name: gluetun-secret
+          volumeMounts:
+            - name: gluetun-tmp
+              mountPath: /tmp/gluetun
+          ports:
+            - name: webui
+              containerPort: 8080
+            - name: prowlarr
+              containerPort: 9696
+        # ---- Torrent client (shares gluetun's netns) -----------------------
+        - name: qbittorrent
+          image: lscr.io/linuxserver/qbittorrent:latest
+          imagePullPolicy: Always
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: America/New_York
+            - name: WEBUI_PORT
+              value: "8080"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            # Same shared volume + path as Radarr/Sonarr. qBittorrent saves
+            # completed downloads to /torrents/downloads.
+            - name: media
+              mountPath: /torrents
+        # ---- Indexer manager (shares gluetun's netns) ----------------------
+        - name: prowlarr
+          image: lscr.io/linuxserver/prowlarr:latest
+          imagePullPolicy: Always
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: America/New_York
+          volumeMounts:
+            # Indexer / tracker configuration (names, URLs, API keys, passkeys,
+            # cookies) lives ONLY here on the PVC. It is never committed to Git.
+            - name: prowlarr-config
+              mountPath: /config

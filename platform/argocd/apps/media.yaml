@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: media
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aboft/homelab-gitops.git
+    targetRevision: main
+    path: apps/media
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: media
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    # ExternalSecrets + PVCs (sync-wave "0") are created before the Deployments
+    # (sync-wave "10") that depend on the synced Secrets.
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

@@ -33,9 +33,9 @@ spec:
               value: https
             - name: TRUSTED_PROXIES
               value: 10.42.0.0/16
-          envFrom:
-            - secretRef:
-                name: nextcloud-secret
+          # envFrom:
+          #   - secretRef:
+          #       name: nextcloud-secret
           volumeMounts:
             # - name: nextcloud-pvc
             #   mountPath: /var/www/html

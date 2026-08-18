@@ -19,9 +19,26 @@ spec:
       labels:
         app: radarr
     spec:
+<<<<<<< HEAD
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
+=======
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - qbittorrent
+                        - radarr
+                        - sonarr
+                topologyKey: kubernetes.io/hostname
+>>>>>>> 5bed0a0 ([media] - init media)
       volumes:
         - name: config
           persistentVolumeClaim:

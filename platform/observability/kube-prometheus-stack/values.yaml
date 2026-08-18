@@ -48,7 +48,7 @@ prometheus:
           - prometheus.aboft.dev
   prometheusSpec:
     retention: 15d
-    retentionSize: 20GB
+    retentionSize: 300GB
     storageSpec:
       volumeClaimTemplate:
         spec:

@@ -9,34 +9,46 @@ storage:
   trace:
     backend: s3
     s3:
+      # Was tempo's bundled minio subchart; replaced by the standalone
+      # observability-rustfs app/release. See platform/observability/rustfs
+      # for why (MinIO's images became unpullable, chart offers no way to
+      # skip the broken hook jobs that provisioned the old minio's bucket).
+      #
+      # Credentials are NOT inlined here (this repo is public) — they're
+      # ${VAR}-expanded at startup from the same rustfs-credentials Secret
+      # RustFS itself consumes (see the s3Env anchor below and
+      # platform/observability/rustfs/rustfs-credentials.externalsecret.yaml).
       bucket: tempo
-      endpoint: tempo-minio.monitoring.svc.cluster.local:9000
-      access_key: grafana-tempo
-      secret_key: supersecret
+      endpoint: rustfs-svc.monitoring.svc.cluster.local:9000
+      access_key: ${RUSTFS_ACCESS_KEY}
+      secret_key: ${RUSTFS_SECRET_KEY}
       insecure: true
 
+# Bundled minio subchart disabled — see storage.trace.s3 above.
 minio:
-  serviceAccount:
-    create: true
-    name: tempo-minio-sa
-  enabled: true
-  rootUser: grafana-tempo
-  rootPassword: supersecret
-  persistence:
-    enabled: true
-    storageClass: local-path
-    size: 20Gi
-  buckets:
-    - name: tempo
-      policy: none
-      purge: false
+  enabled: false
 
-compactor:
-  config:
-    compaction:
-      block_retention: 168h
+# Shared by every component below that touches the object store directly —
+# turns out that's not just distributor/ingester/compactor/querier:
+# metrics-generator also writes optional trace-metrics data back to the
+# backend, and query-frontend initializes a storage client for search
+# sharding in Tempo 2.x. Confirmed by runtime errors, not just reading the
+# chart: metrics-generator failed auth with the literal unexpanded string
+# "${RUSTFS_ACCESS_KEY}" as its access key before this was added here.
+# Only gateway (nginx proxy) and memcached (cache) genuinely don't need it.
+# Enables ${VAR} expansion in tempo.yaml and injects the vars
+# storage.trace.s3 above references. Chart 1.35.0 has no
+# global.extraArgs/extraEnvFrom (added in later chart releases), hence
+# setting it per-component via this YAML anchor instead of repeating it 6x.
+s3Env: &s3Env
+  extraArgs:
+    - "-config.expand-env=true"
+  extraEnvFrom:
+    - secretRef:
+        name: rustfs-credentials
 
 metricsGenerator:
+  <<: *s3Env
   enabled: true
   config:
     storage:
@@ -62,18 +74,22 @@ gateway:
           - tempo.aboft.dev
 
 distributor:
+  <<: *s3Env
   replicas: 1
 ingester:
-  # replication_factor (chart default 3, unchanged) requires a write quorum
-  # of 2 live ingesters. This was previously 1 replica against RF 3, so
-  # quorum could never be met and every write failed ("at least 2 live
-  # replicas required, could only find 1"). 3 k3s nodes are available, so
-  # scale to match RF instead of weakening redundancy: real HA, not a
-  # workaround.
-  replicas: 3
+  <<: *s3Env
+  replicas: 1
+  config:
+    replication_factor: 1
 querier:
+  <<: *s3Env
   replicas: 1
 queryFrontend:
+  <<: *s3Env
   replicas: 1
 compactor:
+  <<: *s3Env
   replicas: 1
+  config:
+    compaction:
+      block_retention: 720h

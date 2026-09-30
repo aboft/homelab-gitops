@@ -3,3 +3,4 @@ resources:
   - scrapeconfig-aerospike-node-exporters.yaml
   - prometheusrule-homelab.yaml
   - grafana-admin.externalsecret.yaml
+  - rustfs-credentials.externalsecret.yaml

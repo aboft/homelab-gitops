@@ -1,0 +1,32 @@
+# RustFS: S3-compatible object storage replacing tempo's bundled MinIO.
+# MinIO's GitHub repo was archived 2026-04-25 and its Docker Hub / quay.io
+# images were deleted/gated off in September 2026, breaking the
+# tempo-distributed chart's bundled minio subchart (its post-sync hook jobs
+# pull a now-dead quay.io/minio/mc image). RustFS is Apache-2.0, S3 API
+# compatible, and actively maintained.
+#
+# Standalone mode (single pod) to match the scale of what it's replacing —
+# see mode.distributed for horizontal scale-out if ever needed.
+mode:
+  standalone:
+    enabled: true
+  distributed:
+    enabled: false
+
+# Credentials come from 1Password via the ExternalSecret in this directory
+# (rustfs-credentials.externalsecret.yaml), not inline — this repo is public.
+secret:
+  existingSecret: rustfs-credentials
+
+storageclass:
+  name: local-path
+  dataStorageSize: 20Gi
+
+# No public route needed — only used in-cluster by Tempo (and later Loki).
+ingress:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi

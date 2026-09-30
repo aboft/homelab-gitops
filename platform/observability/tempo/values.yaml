@@ -44,6 +44,23 @@ metricsGenerator:
       remote_write:
         - url: http://kps-prometheus.monitoring.svc.cluster.local:9090/api/v1/write
 
+gateway:
+  enabled: true
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+    hosts:
+      - host: tempo.aboft.dev
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: tempo-tls
+        hosts:
+          - tempo.aboft.dev
+
 distributor:
   replicas: 1
 ingester:

@@ -2,6 +2,7 @@ namespace: aboftybot-dev
 
 resources:
 - ../../base
+- externalsecret.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

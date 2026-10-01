@@ -22,3 +22,4 @@ resources:
   - observability-tempo.yaml
   - observability-rustfs.yaml
   - aerospike-operator.yaml
+  - mcp-agent.yaml

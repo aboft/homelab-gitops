@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mcp-agent
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aboft/homelab-gitops.git
+    targetRevision: main
+    path: platform/mcp-agent
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mcp-agent
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

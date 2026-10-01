@@ -1,0 +1,53 @@
+# Dedicated, least-privilege identity for the k3s-readonly MCP server (see
+# ~/programming/mcp/k3s-readonly), so the agent authenticates as this
+# instead of riding a personal kubeconfig with cluster-admin.
+#
+# Rules match exactly the 5 tools that server exposes — no more:
+#   list_nodes        -> nodes: get, list
+#   list_pods         -> pods: get, list
+#   get_pod_logs      -> pods/log: get
+#   list_deployments  -> apps/deployments: get, list
+#   get_events        -> events: get, list
+# No "watch" (the tools are one-shot calls, never streams) and nothing
+# outside these 5 resource types — not the built-in "view" ClusterRole,
+# which grants read access to far more (services, configmaps, jobs,
+# ingresses, PVCs, ...) than this tool set uses.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k3s-readonly
+  namespace: mcp-agent
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mcp-k3s-readonly
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-k3s-readonly
+subjects:
+  - kind: ServiceAccount
+    name: k3s-readonly
+    namespace: mcp-agent
+roleRef:
+  kind: ClusterRole
+  name: mcp-k3s-readonly
+  apiGroup: rbac.authorization.k8s.io

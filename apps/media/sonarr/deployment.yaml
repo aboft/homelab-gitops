@@ -19,12 +19,9 @@ spec:
       labels:
         app: sonarr
     spec:
-<<<<<<< HEAD
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: "OnRootMismatch"
-=======
->>>>>>> 5bed0a0 ([media] - init media)
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:

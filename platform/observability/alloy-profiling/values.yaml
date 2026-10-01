@@ -1,0 +1,87 @@
+# A separate, dedicated Alloy release used ONLY for eBPF continuous
+# profiling -- deliberately NOT merged into platform/observability/alloy/
+# (the existing log-shipping DaemonSet). pyroscope.ebpf requires root,
+# hostPID, and elevated capabilities; isolating that escalation here means
+# the DaemonSet that already reads every pod's logs cluster-wide never gains
+# those privileges.
+controller:
+  type: daemonset
+  hostPID: true   # required by pyroscope.ebpf to attach across the host's PID namespace
+  volumes:
+    extra:
+      - name: symb-cache
+        emptyDir: {}
+
+alloy:
+  # pyroscope.ebpf requires running as root plus either privileged:true or six
+  # specific capabilities (BPF, PERFMON, SYS_PTRACE, CHECKPOINT_RESTORE,
+  # SYS_RESOURCE, DAC_READ_SEARCH). Using privileged:true for simplicity on
+  # this single-tenant homelab cluster; revisit as explicit capabilities if
+  # the threat model ever changes. Source:
+  # https://grafana.com/docs/alloy/latest/reference/components/pyroscope/pyroscope.ebpf/
+  securityContext:
+    privileged: true
+    runAsUser: 0
+    runAsGroup: 0
+
+  mounts:
+    extra:
+      - name: symb-cache
+        mountPath: /tmp/symb-cache   # required by pyroscope.ebpf for ELF symbol cache data
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    # No limits -- matches the RustFS precedent. Kept deliberately light
+    # since this DaemonSet runs on every node, including the node(s) running
+    # Aerospike's already-resource-heavy init containers.
+
+  configMap:
+    create: true
+    content: |
+      logging {
+        level = "info"
+      }
+
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      // Opt-in allow-list: only pods explicitly labeled
+      // profiling.aboft.dev/scrape=true are profiled. This is the entire
+      // enforcement mechanism keeping this privileged DaemonSet scoped to
+      // aboftybot (prod+dev) and Aerospike (prod+staging) instead of
+      // whole-cluster, whole-node profiling of every process by default.
+      discovery.relabel "profiling_targets" {
+        targets = discovery.kubernetes.pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_profiling_aboft_dev_scrape"]
+          action        = "keep"
+          regex         = "true"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+      }
+
+      pyroscope.ebpf "profiling" {
+        targets    = discovery.relabel.profiling_targets.output
+        forward_to = [pyroscope.write.default.receiver]
+      }
+
+      pyroscope.write "default" {
+        endpoint {
+          url = "http://pyroscope.monitoring.svc.cluster.local:4040"
+        }
+      }

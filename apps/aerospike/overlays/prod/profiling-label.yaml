@@ -1,0 +1,9 @@
+apiVersion: asdb.aerospike.com/v1
+kind: AerospikeCluster
+metadata:
+  name: asdb
+spec:
+  podSpec:
+    metadata:
+      labels:
+        profiling.aboft.dev/scrape: "true"

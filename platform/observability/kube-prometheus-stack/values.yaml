@@ -143,26 +143,18 @@ kubeEtcd:
     - 192.168.88.101
     - 192.168.88.102
 
+# k3s runs these embedded in the single k3s binary, bound to 127.0.0.1 only,
+# so there's no scrapeable endpoint on the pod/node network for kube-prometheus-stack
+# to hit. Disabled to stop the permanently-firing KubeControllerManagerDown /
+# KubeSchedulerDown / KubeProxyDown alerts (no corresponding target ever exists).
 kubeControllerManager:
-  enabled: true
-  endpoints:
-    - 192.168.88.100
-    - 192.168.88.101
-    - 192.168.88.102
+  enabled: false
 
 kubeScheduler:
-  enabled: true
-  endpoints:
-    - 192.168.88.100
-    - 192.168.88.101
-    - 192.168.88.102
+  enabled: false
 
 kubeProxy:
-  enabled: true
-  endpoints:
-    - 192.168.88.100
-    - 192.168.88.101
-    - 192.168.88.102
+  enabled: false
 
 
 prometheus-node-exporter:

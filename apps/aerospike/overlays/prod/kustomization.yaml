@@ -3,6 +3,11 @@ resources:
 
 namespace: asdb-prod
 
+patches:
+- path: profiling-label.yaml
+  target:
+    kind: AerospikeCluster
+    name: asdb
 
 generatorOptions:
   disableNameSuffixHash: true

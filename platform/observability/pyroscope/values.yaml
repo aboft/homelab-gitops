@@ -1,0 +1,64 @@
+# Single-binary mode (chart default: pyroscope.replicaCount, microservices
+# disabled) mirrors the replicas:1-everywhere pattern already used for Tempo
+# and RustFS's standalone mode. Pyroscope's v2 storage architecture (profile
+# blocks written straight to object storage, no in-memory ingester tier)
+# makes this genuinely sufficient at this scale (2 apps, 4 environments).
+pyroscope:
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    # No limits -- consistent with the RustFS precedent (requests only,
+    # adjust after observing real usage).
+
+  # S3-compatible backend: the SAME RustFS instance that already backs Tempo
+  # (bucket "tempo"), new bucket "pyroscope" -- reuses the already-ESO-synced
+  # rustfs-credentials Secret (platform/observability/externals/) instead of
+  # standing up a third object store. Credentials are NOT inlined (this repo
+  # is public) -- ${VAR}-expanded at startup from that Secret, same trick as
+  # platform/observability/tempo/values.yaml's s3Env anchor.
+  #
+  # NOTE: this chart's extraArgs is a MAP (flag-name: value), unlike Tempo's
+  # list-style extraArgs -- confirmed via `helm show values grafana/pyroscope
+  # --version 2.3.1`, not guessed.
+  extraArgs:
+    config.expand-env: "true"
+  extraEnvFrom:
+    - secretRef:
+        name: rustfs-credentials
+
+  structuredConfig:
+    storage:
+      backend: s3
+      s3:
+        endpoint: rustfs-svc.monitoring.svc.cluster.local:9000
+        bucket_name: pyroscope
+        access_key_id: ${RUSTFS_ACCESS_KEY}
+        secret_access_key: ${RUSTFS_SECRET_KEY}
+        insecure: true
+    limits:
+      # 7d -- intentionally shorter than Tempo/Loki's existing 720h (30d)
+      # convention. Profiles are a "why is this slow right now" signal, not
+      # a long-trend one. Start narrow (2 apps, 4 envs) and watch real RustFS
+      # bucket growth before lengthening retention or widening scope.
+      compactor_blocks_retention_period: 168h
+
+# This chart bundles its own optional Alloy subchart (enabled by default)
+# for self-scraping app-level push profiles -- not what we want here. eBPF
+# collection runs on a separate, dedicated Alloy release
+# (platform/observability/alloy-profiling/) kept deliberately isolated from
+# this chart's lifecycle and privilege level. Disable the bundled one so this
+# release doesn't quietly bring up a second, redundant Alloy instance.
+alloy:
+  enabled: false
+
+# minio stays disabled (chart default) -- RustFS is the object store already
+# running in this cluster; see tempo/values.yaml and rustfs/values.yaml for
+# the history of why RustFS replaced bundled minio subcharts in this repo.
+minio:
+  enabled: false
+
+ingress:
+  enabled: false   # Grafana-datasource-only exposure this round, no public route.

@@ -4,6 +4,12 @@ resources:
 - ../../base
 - externalsecret.yaml
 
+patches:
+- path: profiling-label.yaml
+  target:
+    kind: Deployment
+    name: aboftybot
+
 generatorOptions:
   disableNameSuffixHash: true
 

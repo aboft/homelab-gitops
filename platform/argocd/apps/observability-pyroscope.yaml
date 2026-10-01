@@ -14,7 +14,7 @@ spec:
         valueFiles:
           - $values/platform/observability/pyroscope/values.yaml
     - repoURL: https://github.com/aboft/homelab-gitops.git
-      targetRevision: pyroscope-profiling # TEMP: branch for live Layer-2 testing, flip to main before merge
+      targetRevision: main
       ref: values
   destination:
     server: https://kubernetes.default.svc

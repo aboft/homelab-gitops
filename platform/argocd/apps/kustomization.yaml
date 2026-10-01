@@ -21,5 +21,7 @@ resources:
   - observability-alloy.yaml
   - observability-tempo.yaml
   - observability-rustfs.yaml
+  - observability-pyroscope.yaml
+  - observability-alloy-profiling.yaml
   - aerospike-operator.yaml
   - mcp-agent.yaml

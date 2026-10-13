@@ -1,6 +1,14 @@
 deploymentMode: SimpleScalable
 
 global:
+  # Chart 6.55 applies these to every Loki pod. ${VAR} in loki.storage.s3
+  # is expanded at startup from the same rustfs-credentials Secret RustFS
+  # and Tempo already use.
+  extraArgs:
+    - "-config.expand-env=true"
+  extraEnvFrom:
+    - secretRef:
+        name: rustfs-credentials
   podSecurityContext:
     fsGroup: 10001
     runAsUser: 10001
@@ -26,6 +34,7 @@ loki:
     retention_period: 720h
     reject_old_samples: true
     reject_old_samples_max_age: 168h
+    volume_enabled: true
 
   compactor:
     retention_enabled: true
@@ -33,16 +42,18 @@ loki:
     retention_delete_delay: 2h
     retention_delete_worker_count: 50
 
+  # Chart keys (not raw loki.yml). Rendered as common.storage.s3 with
+  # s3forcepathstyle and insecure, which is what RustFS expects. The
+  # extraObjects Job below creates buckets loki and loki-ruler.
   storage:
     type: s3
     bucketNames:
-      chunks: chunks
-      ruler: ruler
-      admin: admin
+      chunks: loki
+      ruler: loki-ruler
     s3:
-      endpoint: http://loki-minio.monitoring.svc.cluster.local:9000
-      accessKeyId: root-user
-      secretAccessKey: supersecretpassword
+      endpoint: rustfs-svc.monitoring.svc.cluster.local:9000
+      accessKeyId: ${RUSTFS_ACCESS_KEY}
+      secretAccessKey: ${RUSTFS_SECRET_KEY}
       s3ForcePathStyle: true
       insecure: true
 
@@ -51,27 +62,64 @@ loki:
     runAsUser: 10001
     runAsGroup: 10001
 
+# Bundled minio subchart disabled. While it is enabled the chart ignores
+# loki.storage and points at the in-chart MinIO instead. Object storage is
+# the standalone RustFS release; see platform/observability/rustfs.
 minio:
-  serviceAccount:
-    create: true
-    name: loki-minio-sa
-  enabled: true
-  rootUser: root-user
-  rootPassword: supersecretpassword
-  persistence:
-    enabled: true
-    storageClass: local-path
-    size: 20Gi
-  buckets:
-    - name: chunks
-      policy: none
-      purge: false
-    - name: ruler
-      policy: none
-      purge: false
-    - name: admin
-      policy: none
-      purge: false
+  enabled: false
+
+# RustFS has no bucket CRD and this chart stopped provisioning buckets when
+# its minio subchart was disabled. Argo CD runs this Job as a PreSync hook,
+# so the buckets exist before Loki rolls out, then deletes it. --ignore-existing
+# makes every sync safe.
+#
+# Client pin: rustfs/rc:v0.1.36 (rc 0.1.36). Same digest as rustfs/rc:latest
+# on 2026-09-16 (sha256:ab024bfebee49a750ce886b4c70963ccd9ddaa03f491704a90710641d7a26699).
+# Checked against the running server rustfs/rustfs:1.0.0 (chart 1.0.0):
+# alias, ping, and bucket list succeeded. Bump this tag when testing a newer
+# client. Loki stays on chart 6.55.0, which deploys grafana/loki:3.6.7.
+extraObjects:
+  - |
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: loki-rustfs-buckets
+      namespace: monitoring
+      annotations:
+        argocd.argoproj.io/hook: PreSync
+        argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 120
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: rc
+              image: rustfs/rc:v0.1.36
+              envFrom:
+                - secretRef:
+                    name: rustfs-credentials
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  i=0
+                  until /usr/bin/rc alias set rustfs \
+                    http://rustfs-svc.monitoring.svc.cluster.local:9000 \
+                    "$RUSTFS_ACCESS_KEY" "$RUSTFS_SECRET_KEY" \
+                    --bucket-lookup path
+                  do
+                    i=$((i + 1))
+                    if [ "$i" -gt 30 ]; then
+                      echo "rustfs not ready" >&2
+                      exit 1
+                    fi
+                    echo "waiting for rustfs"
+                    sleep 2
+                  done
+                  /usr/bin/rc bucket create --ignore-existing rustfs/loki
+                  /usr/bin/rc bucket create --ignore-existing rustfs/loki-ruler
 
 write:
   replicas: 1

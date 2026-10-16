@@ -20,6 +20,7 @@ spec:
         - proxbox.aboft.local:9100
         - proxbench.aboft.local:9100
         - minipc.aboft.local:9100
+        - archtop.aboft.local:9100
   relabelings:
     - sourceLabels: [__address__]
       targetLabel: instance

@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: nvidia-node-exporters
+  namespace: monitoring
+  labels:
+    prometheus: kps
+spec:
+  scrapeInterval: 15s
+  staticConfigs:
+    - labels:
+        job: nvidia-node-exporters
+        cluster: homelab
+      targets:
+        - archtop.aboft.local:9400
+  relabelings:
+    - sourceLabels: [__address__]
+      targetLabel: instance
+    - targetLabel: job
+      replacement: node-exporter
